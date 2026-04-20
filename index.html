@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIMO - Torby z odzysku, design z historią</title>
+    <!-- Tailwind CSS dla szybkiego i nowoczesnego stylizowania -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ikony Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mimo-green': '#2C5545', // Zgaszona, leśna zieleń z logo
+                        'mimo-terra': '#D2855F', // Ciepła terakota z logo
+                        'mimo-bg': '#F9F8F6', // Złamana biel
+                        'mimo-dark': '#1A1A1A',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #F9F8F6;
+            color: #2C5545;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Niestandardowy kursor - nawiązanie do pętli */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #D2855F;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+        
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #2C5545;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s ease, width 0.2s, height 0.2s, border-color 0.2s;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Stylizacja scrollbara */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F9F8F6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2C5545;
+            border-radius: 4px;
+        }
+
+        /* Rozmycie pod nawigacją */
+        .glass-nav {
+            background: rgba(249, 248, 246, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Efekty kart produktów */
+        .product-card {
+            transition: all 0.4s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+        .product-image-wrapper {
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+        .product-image {
+            transition: transform 0.7s ease;
+        }
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        /* Sekcja paszportu */
+        .passport-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease;
+            opacity: 0;
+        }
+        .passport-section.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        /* Dekoracyjne pętle w tle (SVG) */
+        .bg-loop {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-mimo-terra selection:text-white relative">
+
+    <!-- Niestandardowy kursor (ukryty na mobile) -->
+    <div class="cursor-dot hidden md:block" id="cursor-dot"></div>
+    <div class="cursor-outline hidden md:block" id="cursor-outline"></div>
+
+    <!-- Tło wektorowe - pętle -->
+    <svg class="bg-loop top-0 left-0 w-full h-screen" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path d="M-20,50 Q30,10 50,50 T120,50" fill="none" stroke="#2C5545" stroke-width="0.5" />
+        <path d="M-20,60 Q30,20 50,60 T120,60" fill="none" stroke="#D2855F" stroke-width="0.5" />
+    </svg>
+
+    <!-- Nawigacja Desktop & Mobile Header -->
+    <nav class="fixed w-full z-50 glass-nav border-b border-mimo-green/10 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer interactive-element" onclick="window.scrollTo(0,0)">
+                    <div class="relative flex items-center">
+                        <div class="flex flex-col">
+                            <span class="font-sans font-bold text-3xl tracking-widest text-mimo-green leading-none">MIMO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linki Desktop -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#kolekcja" class="font-sans text-sm font-semibold tracking-wide hover:text-mimo-terra transition-colors interactive-element">KOLEKCJA</a>
+                    <a href="#obieg" class="font-sans text-sm font-semibold tracking-wide hover:text-mimo-terra transition-colors interactive-element">NASZ OBIEG</a>
+                    <a href="#wplyw" class="font-sans text-sm font-semibold tracking-wide hover:text-mimo-terra transition-colors interactive-element">MIMO WSZYSTKO</a>
+                    <button class="bg-mimo-green text-mimo-bg px-6 py-2 rounded-full font-sans text-sm font-semibold hover:bg-mimo-terra transition-colors interactive-element flex items-center gap-2">
+                        <i data-lucide="shopping-bag" class="w-4 h-4"></i> Koszyk (0)
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center z-50">
+                    <button id="mobile-menu-btn" class="text-mimo-green hover:text-mimo-terra interactive-element relative z-50">
+                        <i data-lucide="menu" class="w-8 h-8 transition-transform duration-300" id="menu-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Mobilne (Pełnoekranowe) -->
+    <div id="mobile-menu" class="fixed inset-0 bg-mimo-bg/95 backdrop-blur-xl z-40 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col pt-28 px-6 pb-8 h-screen overflow-y-auto border-l border-mimo-green/10">
+        <div class="flex flex-col space-y-8 text-center mt-4">
+            <a href="#kolekcja" class="mobile-link font-sans text-2xl font-bold tracking-widest text-mimo-dark hover:text-mimo-terra transition-colors">KOLEKCJA</a>
+            <a href="#obieg" class="mobile-link font-sans text-2xl font-bold tracking-widest text-mimo-dark hover:text-mimo-terra transition-colors">NASZ OBIEG</a>
+            <a href="#wplyw" class="mobile-link font-sans text-2xl font-bold tracking-widest text-mimo-dark hover:text-mimo-terra transition-colors">MIMO WSZYSTKO</a>
+            <div class="pt-8 w-full border-t border-mimo-green/10">
+                <button class="w-full bg-mimo-green text-mimo-bg px-8 py-4 rounded-full font-sans text-lg font-bold hover:bg-mimo-terra transition-colors flex items-center justify-center gap-2 shadow-lg">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i> Twój Koszyk (0)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section: Interaktywna Transformacja -->
+    <section class="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden">
+        <div class="absolute inset-0 z-0 flex items-center justify-center opacity-10">
+            <!-- Duża, powolna pętla w tle -->
+            <svg width="800" height="800" viewBox="0 0 100 100" class="animate-spin-slow">
+                 <path d="M20 50 Q50 10 80 50 T20 50" fill="none" stroke="#2C5545" stroke-width="1"/>
+            </svg>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
+            
+            <div class="text-center md:text-left space-y-6 md:space-y-8">
+                <div class="inline-block px-4 py-1 rounded-full border border-mimo-terra/30 bg-mimo-terra/10 text-mimo-terra font-sans text-xs tracking-widest font-bold mb-2">
+                    NOWA KOLEKCJA "ODNOWA"
+                </div>
+                <h1 class="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight text-mimo-dark">
+                    MIMO, że byłem <span class="text-mimo-terra italic block mt-1">odpadem...</span>
+                </h1>
+                <p class="font-sans text-base sm:text-lg md:text-xl text-mimo-green/80 max-w-lg mx-auto md:mx-0">
+                    Teraz jestem Twoją historią. Ręcznie szyte torby z materiałów odzyskanych. Design, który ratuje planetę bez kompromisów estetycznych.
+                </p>
+                <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#kolekcja" class="bg-mimo-terra text-mimo-bg px-8 py-4 rounded-full font-sans font-bold tracking-wide hover:bg-mimo-green transition-all transform hover:-translate-y-1 interactive-element inline-flex justify-center items-center gap-2">
+                        Odkryj kolekcję <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#obieg" class="bg-transparent border-2 border-mimo-green text-mimo-green px-8 py-4 rounded-full font-sans font-bold tracking-wide hover:bg-mimo-green hover:text-mimo-bg transition-all interactive-element inline-flex justify-center items-center text-center">
+                        Jak to robimy?
+                    </a>
+                </div>
+            </div>
+
+            <!-- Interaktywna wizualizacja produktu (Dostosowana do dotyku "ontouchstart") -->
+            <div class="relative h-[400px] md:h-[500px] w-full flex items-center justify-center animate-float group cursor-pointer" ontouchstart="">
+                
+                <!-- Ostrzeżenie / Instrukcja dostosowana do Mobile/Desktop -->
+                <div class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none transition-opacity duration-500 group-hover:opacity-0 group-active:opacity-0">
+                    <span class="bg-mimo-bg/95 backdrop-blur-sm px-6 py-3 rounded-full text-mimo-dark font-bold tracking-wide text-sm border border-mimo-green/20 shadow-xl animate-bounce flex items-center gap-2 text-center">
+                        <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-mimo-terra hidden md:block"></i>
+                        <i data-lucide="hand" class="w-4 h-4 text-mimo-terra block md:hidden"></i> 
+                        <span class="hidden md:inline">Najedź myszką</span><span class="inline md:hidden">Dotknij grafiki</span>, by złożyć torbę
+                    </span>
+                </div>
+
+                <!-- The Scraps Container (zeskalowany dla mniejszych ekranów) -->
+                <div class="relative w-64 h-80 sm:w-80 sm:h-96 transform scale-90 sm:scale-100">
+                    
+                    <!-- Resztka: Ścinek niepotrzebny 1 (odlatuje i znika) -->
+                    <div class="absolute w-32 h-20 bg-gray-300 rounded-bl-3xl border-2 border-dashed border-gray-400 top-20 left-[-20px] sm:left-[-40px] z-0
+                                transition-all duration-700 ease-in-out
+                                opacity-80 rotate-[-10deg]
+                                group-hover:opacity-0 group-hover:translate-x-[-100px] group-hover:rotate-[-45deg] group-hover:scale-50
+                                group-active:opacity-0 group-active:translate-x-[-100px] group-active:rotate-[-45deg] group-active:scale-50">
+                    </div>
+
+                    <!-- Resztka: Ścinek niepotrzebny 2 (odlatuje i znika) -->
+                    <div class="absolute w-24 h-24 bg-[#E8DCCB] rounded-tr-full top-[60%] right-[-10px] sm:right-[-30px] z-0
+                                transition-all duration-700 ease-in-out
+                                opacity-80 rotate-[30deg]
+                                group-hover:opacity-0 group-hover:translate-y-[80px] group-hover:translate-x-[40px] group-hover:rotate-[120deg] group-hover:scale-50
+                                group-active:opacity-0 group-active:translate-y-[80px] group-active:translate-x-[40px] group-active:rotate-[120deg] group-active:scale-50">
+                    </div>
+
+                    <!-- Pasek 1 (lewe ucho) -->
+                    <div class="absolute w-6 h-40 sm:h-48 bg-mimo-terra top-8 left-16 sm:left-20 z-10 rounded-t-full origin-bottom
+                                transition-all duration-1000 ease-out delay-75
+                                -translate-x-32 -translate-y-16 -rotate-[60deg] opacity-60
+                                group-hover:translate-x-0 group-hover:translate-y-0 group-hover:-rotate-12 group-hover:opacity-100 border-l-2 border-dashed border-black/20
+                                group-active:translate-x-0 group-active:translate-y-0 group-active:-rotate-12 group-active:opacity-100">
+                    </div>
+
+                    <!-- Pasek 2 (prawe ucho) -->
+                    <div class="absolute w-6 h-40 sm:h-48 bg-mimo-terra top-8 right-16 sm:right-20 z-10 rounded-t-full origin-bottom
+                                transition-all duration-1000 ease-out delay-150
+                                translate-x-32 -translate-y-10 rotate-[70deg] opacity-60
+                                group-hover:translate-x-0 group-hover:translate-y-0 group-hover:rotate-12 group-hover:opacity-100 border-r-2 border-dashed border-black/20
+                                group-active:translate-x-0 group-active:translate-y-0 group-active:rotate-12 group-active:opacity-100">
+                    </div>
+
+                    <!-- Główna bryła torby -->
+                    <div class="absolute w-64 h-56 sm:w-72 sm:h-64 bg-mimo-green bottom-4 left-0 sm:left-4 z-20 rounded-2xl shadow-2xl overflow-hidden
+                                transition-all duration-1000 ease-out delay-200
+                                translate-y-32 rotate-[-25deg] opacity-70 scale-90
+                                group-hover:translate-y-0 group-hover:rotate-0 group-hover:opacity-100 group-hover:scale-100 border-t-4 border-dashed border-white/20
+                                group-active:translate-y-0 group-active:rotate-0 group-active:opacity-100 group-active:scale-100">
+                        <!-- Tekstura na bryle -->
+                        <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-black to-transparent"></div>
+                    </div>
+
+                    <!-- Kieszeń / Nakładka ze ścinka -->
+                    <div class="absolute w-36 h-28 sm:w-40 sm:h-32 bg-[#1f3d32] bottom-12 left-16 sm:left-20 z-30 rounded-xl
+                                transition-all duration-1000 ease-out delay-300
+                                translate-x-40 translate-y-40 rotate-[50deg] opacity-0
+                                group-hover:translate-x-0 group-hover:translate-y-0 group-hover:rotate-0 group-hover:opacity-100 border-2 border-dashed border-mimo-terra/50
+                                group-active:translate-x-0 group-active:translate-y-0 group-active:rotate-0 group-active:opacity-100">
+                    </div>
+
+                    <!-- Metka MIMO -->
+                    <div class="absolute w-12 h-6 sm:w-16 sm:h-8 bg-mimo-bg top-[180px] sm:top-[220px] right-0 sm:right-2 z-40 flex items-center justify-center rounded-sm shadow-md
+                                transition-all duration-1000 ease-out delay-500
+                                translate-x-24 -translate-y-20 rotate-[120deg] opacity-0
+                                group-hover:translate-x-0 group-hover:translate-y-0 group-hover:rotate-[-5deg] group-hover:opacity-100
+                                group-active:translate-x-0 group-active:translate-y-0 group-active:rotate-[-5deg] group-active:opacity-100">
+                        <span class="font-sans font-bold text-[10px] sm:text-[12px] tracking-widest text-mimo-green">MIMO</span>
+                    </div>
+
+                    <!-- Potwierdzenie po złożeniu -->
+                    <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-mimo-dark text-mimo-bg px-6 py-2 rounded-full text-xs sm:text-sm font-sans font-bold flex items-center gap-2 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-500 delay-700 z-50 whitespace-nowrap">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-mimo-terra"></i> Upcykling zakończony
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Sekcja Sklepu: Kolekcja z Paszportem -->
+    <section id="kolekcja" class="py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 px-4">
+                <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-mimo-dark mb-4">Każda inna. Wszystkie MIMO.</h2>
+                <p class="font-sans text-sm sm:text-base text-mimo-green/70 max-w-2xl mx-auto">Ponieważ pracujemy na odzyskanych materiałach, każdy model to unikat. Wybierz swój fason i poznaj jego historię.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+                
+                <!-- Produkt 1 -->
+                <div class="product-card group">
+                    <div class="product-image-wrapper bg-mimo-bg aspect-[4/5] relative flex items-center justify-center p-8 mb-6 border border-mimo-green/5">
+                        <div class="absolute top-4 right-4 text-mimo-terra cursor-help interactive-element group" title="Paszport Cyfrowy dostępny">
+                            <i data-lucide="scan-line" class="w-6 h-6"></i>
+                        </div>
+                        <!-- SVG zamiast zdjęcia dla dema -->
+                        <svg width="150" height="200" viewBox="0 0 200 250" class="product-image drop-shadow-xl">
+                            <path d="M50,80 C50,0 150,0 150,80" fill="none" stroke="#2C5545" stroke-width="10" stroke-linecap="round"/>
+                            <rect x="30" y="70" width="140" height="160" rx="15" fill="#E8DCCB" stroke="#2C5545" stroke-width="2"/>
+                            <path d="M30,120 L170,120" stroke="#2C5545" stroke-width="2" stroke-dasharray="5,5"/>
+                        </svg>
+                    </div>
+                    <div class="flex justify-between items-start mb-2 px-2">
+                        <div>
+                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-mimo-dark">Shopper "Praga"</h3>
+                            <p class="font-sans text-xs sm:text-sm text-mimo-green/60">Z płótna namiotowego</p>
+                        </div>
+                        <span class="font-sans font-bold text-lg text-mimo-green">289 zł</span>
+                    </div>
+                    
+                    <!-- Przycisk Paszportu -->
+                    <button onclick="togglePassport('passport-1')" class="w-full mt-4 py-3 sm:py-2 border border-mimo-terra text-mimo-terra rounded-lg font-sans font-semibold hover:bg-mimo-terra hover:text-white transition-colors interactive-element flex justify-center items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i> Poznaj poprzednie życie
+                    </button>
+
+                    <!-- Cyfrowy Paszport (Ukryty domyślnie) -->
+                    <div id="passport-1" class="passport-section bg-mimo-bg mt-4 rounded-xl p-5 sm:p-6 border border-mimo-terra/20 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 opacity-5">
+                            <i data-lucide="fingerprint" class="w-32 h-32 -mt-4 -mr-4"></i>
+                        </div>
+                        <h4 class="font-bold font-sans text-mimo-dark mb-4 border-b border-mimo-green/10 pb-2 flex items-center gap-2 text-sm sm:text-base">
+                            <i data-lucide="book-open" class="w-4 h-4 text-mimo-terra"></i> Cyfrowy Paszport ID: #8842
+                        </h4>
+                        <ul class="space-y-4 relative z-10">
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">2018-2023</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Służyłem jako wojskowy namiot logistyczny. Zniosłem 3 zimy.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Maj 2024</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Trafiłem do pracowni MIMO na warszawskiej Pradze. Zostałem wyprany ekologicznymi środkami.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Dziś</div>
+                                <div class="text-xs sm:text-sm text-mimo-green font-bold">Jestem wytrzymałą torbą, odporną na deszcz. Gotowy na miasto.</div>
+                            </li>
+                        </ul>
+                        <button class="w-full mt-6 bg-mimo-green text-white py-4 sm:py-3 rounded-lg font-bold hover:bg-mimo-dark transition-colors interactive-element">
+                            Dodaj do koszyka
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Produkt 2 -->
+                <div class="product-card group">
+                    <div class="product-image-wrapper bg-mimo-bg aspect-[4/5] relative flex items-center justify-center p-8 mb-6 border border-mimo-green/5">
+                        <div class="absolute top-4 right-4 text-mimo-terra cursor-help interactive-element group">
+                            <i data-lucide="scan-line" class="w-6 h-6"></i>
+                        </div>
+                        <svg width="180" height="150" viewBox="0 0 200 150" class="product-image drop-shadow-xl">
+                            <!-- Pasek nerki -->
+                            <path d="M10,50 L190,50" stroke="#1A1A1A" stroke-width="15" stroke-linecap="round"/>
+                            <rect x="50" y="40" width="100" height="70" rx="35" fill="#2C5545" stroke="#F9F8F6" stroke-width="2"/>
+                            <path d="M70,60 L130,60" stroke="#D2855F" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="flex justify-between items-start mb-2 px-2">
+                        <div>
+                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-mimo-dark">Nerka "Flow"</h3>
+                            <p class="font-sans text-xs sm:text-sm text-mimo-green/60">Z baneru reklamowego</p>
+                        </div>
+                        <span class="font-sans font-bold text-lg text-mimo-green">149 zł</span>
+                    </div>
+                    
+                    <button onclick="togglePassport('passport-2')" class="w-full mt-4 py-3 sm:py-2 border border-mimo-terra text-mimo-terra rounded-lg font-sans font-semibold hover:bg-mimo-terra hover:text-white transition-colors interactive-element flex justify-center items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i> Poznaj poprzednie życie
+                    </button>
+
+                    <div id="passport-2" class="passport-section bg-mimo-bg mt-4 rounded-xl p-5 sm:p-6 border border-mimo-terra/20 relative overflow-hidden">
+                         <h4 class="font-bold font-sans text-mimo-dark mb-4 border-b border-mimo-green/10 pb-2 flex items-center gap-2 text-sm sm:text-base">
+                            <i data-lucide="book-open" class="w-4 h-4 text-mimo-terra"></i> Cyfrowy Paszport ID: #2109
+                        </h4>
+                        <ul class="space-y-4 relative z-10">
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Lato 2023</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Wisiałem na rusztowaniu podczas festiwalu muzycznego. Mój materiał to gruba siatka mesh.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Wiosna 2024</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Zamiast na wysypisko, pojechałem do szwalni. Wycięto ze mnie najciekawsze fragmenty grafiki.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Dziś</div>
+                                <div class="text-xs sm:text-sm text-mimo-green font-bold">Jestem nerką idealną na rower. Lekki i całkowicie wodoodporny.</div>
+                            </li>
+                        </ul>
+                        <button class="w-full mt-6 bg-mimo-green text-white py-4 sm:py-3 rounded-lg font-bold hover:bg-mimo-dark transition-colors interactive-element">
+                            Dodaj do koszyka
+                        </button>
+                    </div>
+                </div>
+
+                 <!-- Produkt 3 -->
+                 <div class="product-card group md:hidden lg:block">
+                    <div class="product-image-wrapper bg-mimo-bg aspect-[4/5] relative flex items-center justify-center p-8 mb-6 border border-mimo-green/5">
+                        <div class="absolute top-4 right-4 text-mimo-terra cursor-help interactive-element group">
+                            <i data-lucide="scan-line" class="w-6 h-6"></i>
+                        </div>
+                        <svg width="140" height="180" viewBox="0 0 140 180" class="product-image drop-shadow-xl">
+                            <!-- Paski plecaka -->
+                            <path d="M40,20 Q10,-10 20,60" fill="none" stroke="#2C5545" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M100,20 Q130,-10 120,60" fill="none" stroke="#2C5545" stroke-width="8" stroke-linecap="round"/>
+                            <!-- Worek -->
+                            <path d="M20,30 L120,30 L130,160 Q130,170 120,170 L20,170 Q10,170 10,160 Z" fill="#D2855F" stroke="#1A1A1A" stroke-width="2"/>
+                            <!-- Sznurek -->
+                            <path d="M20,50 L120,50" stroke="#F9F8F6" stroke-width="3" stroke-dasharray="6,4"/>
+                        </svg>
+                    </div>
+                    <div class="flex justify-between items-start mb-2 px-2">
+                        <div>
+                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-mimo-dark">Worek "Zero"</h3>
+                            <p class="font-sans text-xs sm:text-sm text-mimo-green/60">Z resztek tapicerskich</p>
+                        </div>
+                        <span class="font-sans font-bold text-lg text-mimo-green">189 zł</span>
+                    </div>
+                    
+                    <button onclick="togglePassport('passport-3')" class="w-full mt-4 py-3 sm:py-2 border border-mimo-terra text-mimo-terra rounded-lg font-sans font-semibold hover:bg-mimo-terra hover:text-white transition-colors interactive-element flex justify-center items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i> Poznaj poprzednie życie
+                    </button>
+
+                    <div id="passport-3" class="passport-section bg-mimo-bg mt-4 rounded-xl p-5 sm:p-6 border border-mimo-terra/20 relative overflow-hidden">
+                         <h4 class="font-bold font-sans text-mimo-dark mb-4 border-b border-mimo-green/10 pb-2 flex items-center gap-2 text-sm sm:text-base">
+                            <i data-lucide="book-open" class="w-4 h-4 text-mimo-terra"></i> Cyfrowy Paszport ID: #0045
+                        </h4>
+                        <ul class="space-y-4 relative z-10">
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Fabryka mebli</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Byłem końcówką belki materiału welurowego, z którego robiono kanapy. Za mały na fotel, w sam raz do śmietnika.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Projekt MIMO</div>
+                                <div class="text-xs sm:text-sm text-mimo-green">Zostałem ocalony (Zero Waste). Zestawiono mnie w technice patchwork z innym, pasującym kawałkiem.</div>
+                            </li>
+                            <li class="flex gap-4 flex-col sm:flex-row">
+                                <div class="w-auto sm:w-24 font-bold text-mimo-terra text-xs sm:text-sm">Dziś</div>
+                                <div class="text-xs sm:text-sm text-mimo-green font-bold">Jestem miękkim plecakiem-workiem. Niezwykle przyjemnym w dotyku.</div>
+                            </li>
+                        </ul>
+                        <button class="w-full mt-6 bg-mimo-green text-white py-4 sm:py-3 rounded-lg font-bold hover:bg-mimo-dark transition-colors interactive-element">
+                            Dodaj do koszyka
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Sekcja Edukacyjna / Impact (MIMO Wszystko) -->
+    <section id="wplyw" class="py-24 bg-mimo-green text-mimo-bg relative overflow-hidden">
+        <!-- Dekoracyjne koło w tle -->
+        <div class="absolute -right-64 -top-64 w-[600px] sm:w-[800px] h-[600px] sm:h-[800px] border border-mimo-terra/20 rounded-full"></div>
+        <div class="absolute -left-32 -bottom-32 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] border-[10px] sm:border-[20px] border-mimo-terra/10 rounded-full"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-12 sm:mb-16">
+                <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl text-mimo-terra mb-4">MIMO wszystko, ratujemy planetę.</h2>
+                <p class="font-sans text-base sm:text-lg max-w-2xl mx-auto opacity-90 px-2">Nie używamy nowych materiałów. Każda nasza torba to realne liczby, które robią różnicę. Zobacz, co osiągnęliśmy razem z naszymi klientami.</p>
+            </div>
+
+            <!-- Liczniki (z prostą animacją JS) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-center mb-12 sm:mb-16">
+                <div class="bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-mimo-terra transition-colors">
+                    <i data-lucide="droplets" class="w-10 h-10 sm:w-12 sm:h-12 text-mimo-terra mx-auto mb-4"></i>
+                    <div class="text-4xl sm:text-5xl font-serif font-bold mb-2 counter" data-target="152000">0</div>
+                    <div class="font-sans text-xs sm:text-sm tracking-widest uppercase opacity-80">Litrów wody oszczędzonych</div>
+                    <div class="text-[10px] sm:text-xs mt-2 opacity-60">(Brak upraw nowej bawełny)</div>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-mimo-terra transition-colors">
+                    <i data-lucide="scissors" class="w-10 h-10 sm:w-12 sm:h-12 text-mimo-terra mx-auto mb-4"></i>
+                    <div class="text-4xl sm:text-5xl font-serif font-bold mb-2 counter" data-target="3450">0</div>
+                    <div class="font-sans text-xs sm:text-sm tracking-widest uppercase opacity-80">Metrów kw. materiału uratowanych</div>
+                    <div class="text-[10px] sm:text-xs mt-2 opacity-60">(Zamiast wysypiska/spalarni)</div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-lg p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-mimo-terra transition-colors">
+                    <i data-lucide="heart-handshake" class="w-10 h-10 sm:w-12 sm:h-12 text-mimo-terra mx-auto mb-4"></i>
+                    <div class="text-4xl sm:text-5xl font-serif font-bold mb-2 counter" data-target="1204">0</div>
+                    <div class="font-sans text-xs sm:text-sm tracking-widest uppercase opacity-80">Unikalnych historii stworzonych</div>
+                    <div class="text-[10px] sm:text-xs mt-2 opacity-60">(Zadowolonych klientów MIMO)</div>
+                </div>
+            </div>
+            
+            <!-- Wezwanie do działania -->
+            <div class="text-center">
+                <a href="#kolekcja" class="inline-block bg-mimo-terra text-white px-8 py-4 rounded-full font-sans font-bold tracking-wide hover:bg-white hover:text-mimo-green transition-all transform hover:-translate-y-1 interactive-element w-full sm:w-auto">
+                    Dołącz do obiegu zamkniętego
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stopka -->
+    <footer class="bg-mimo-dark text-mimo-bg/70 py-12 sm:py-16 font-sans">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12 text-center sm:text-left">
+                <!-- Brand -->
+                <div class="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col items-center sm:items-start">
+                    <div class="flex items-center mb-6">
+                        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" class="mr-2">
+                            <path d="M30 70 L30 40 Q40 20 50 40 L60 70" stroke="#F9F8F6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M40 70 L40 50 Q50 30 65 50 Q80 70 90 50 Q80 30 65 50" stroke="#D2855F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="font-bold text-xl tracking-widest text-mimo-bg">MIMO</span>
+                    </div>
+                    <p class="text-sm mb-4 max-w-xs">Design z historią. Szyjemy w Polsce z materiałów, które miały stać się odpadem.</p>
+                </div>
+                
+                <!-- Linki -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Sklep</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Wszystkie produkty</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Shopperki</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Nerki i małe torby</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Karty Podarunkowe</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4">MIMO</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Nasz manifest</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Cyfrowy Paszport - co to?</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Oddaj starą torbę (Zniżka)</a></li>
+                        <li><a href="#" class="hover:text-mimo-terra transition-colors interactive-element">Kontakt</a></li>
+                    </ul>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="col-span-1 sm:col-span-2 md:col-span-1 mt-6 sm:mt-0">
+                    <h4 class="text-white font-bold mb-4">Dołącz do pętli</h4>
+                    <p class="text-sm mb-4 max-w-xs mx-auto sm:mx-0">Zapisz się, by dostawać info o unikatowych dropach (zanim znikną).</p>
+                    <form class="flex gap-2 max-w-sm mx-auto sm:mx-0">
+                        <input type="email" placeholder="Twój e-mail" class="bg-white/10 border border-white/20 rounded-lg px-4 py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-mimo-terra">
+                        <button type="button" class="bg-mimo-terra text-white px-5 py-3 rounded-lg hover:bg-white hover:text-mimo-dark transition-colors interactive-element">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs gap-4">
+                <p>&copy; 2024 MIMO Design. Wszystkie prawa zastrzeżone.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-white transition-colors"><i data-lucide="instagram" class="w-5 h-5"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i data-lucide="facebook" class="w-5 h-5"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Skrypty JS dla interakcji -->
+    <script>
+        // Inicjalizacja ikon Lucide
+        lucide.createIcons();
+
+        // 0. Obsługa Menu Mobilnego
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                mobileMenu.classList.remove('translate-x-full');
+                menuIcon.setAttribute('data-lucide', 'x');
+                document.body.style.overflow = 'hidden'; // Zablokuj scrollowanie tła
+            } else {
+                mobileMenu.classList.add('translate-x-full');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                document.body.style.overflow = ''; // Odblokuj scrollowanie
+            }
+            lucide.createIcons();
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMenu);
+
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if(isMenuOpen) toggleMenu();
+            });
+        });
+
+        // 1. Obsługa Cyfrowego Paszportu (rozwijanie/zwijanie)
+        function togglePassport(id) {
+            const passport = document.getElementById(id);
+            const allPassports = document.querySelectorAll('.passport-section');
+            
+            // Zamknij wszystkie inne otwarte paszporty
+            allPassports.forEach(p => {
+                if (p.id !== id && p.classList.contains('open')) {
+                    p.classList.remove('open');
+                }
+            });
+
+            // Przełącz obecny
+            passport.classList.toggle('open');
+        }
+
+        // 2. Niestandardowy Kursor (Kółko podążające za myszką - tylko desktop)
+        const dot = document.getElementById('cursor-dot');
+        const outline = document.getElementById('cursor-outline');
+        const interactiveElements = document.querySelectorAll('.interactive-element, a, button, input');
+
+        if (window.matchMedia("(min-width: 768px)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
+
+                dot.style.transform = `translate(${posX}px, ${posY}px)`;
+                outline.style.left = `${posX}px`;
+                outline.style.top = `${posY}px`;
+            });
+
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    outline.style.width = '60px';
+                    outline.style.height = '60px';
+                    outline.style.borderColor = '#D2855F';
+                    dot.style.transform = `translate(${outline.style.left}, ${outline.style.top}) scale(0)`;
+                });
+                el.addEventListener('mouseleave', () => {
+                    outline.style.width = '40px';
+                    outline.style.height = '40px';
+                    outline.style.borderColor = '#2C5545';
+                    dot.style.transform = `translate(${outline.style.left}, ${outline.style.top}) scale(1)`;
+                });
+            });
+        }
+
+        // 3. Efekt Navbar przy scrollowaniu
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-md');
+                navbar.classList.replace('border-mimo-green/10', 'border-transparent');
+            } else {
+                navbar.classList.remove('shadow-md');
+                navbar.classList.replace('border-transparent', 'border-mimo-green/10');
+            }
+        });
+
+        // 4. Animacja Liczników "Impact" przy scrollu
+        const counters = document.querySelectorAll('.counter');
+        let animated = false;
+
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText.replace(/,/g, '');
+                // Prędkość animacji
+                const increment = target / 100;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + increment).toLocaleString('pl-PL');
+                    setTimeout(animateCounters, 20);
+                } else {
+                    counter.innerText = target.toLocaleString('pl-PL') + (target > 1000 ? '+' : '');
+                }
+            });
+        };
+
+        // Uruchomienie liczników, gdy sekcja jest widoczna
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !animated) {
+                animated = true;
+                animateCounters();
+            }
+        }, { threshold: 0.5 });
+
+        const impactSection = document.getElementById('wplyw');
+        if (impactSection) {
+            observer.observe(impactSection);
+        }
+    </script>
+</body>
+</html>
